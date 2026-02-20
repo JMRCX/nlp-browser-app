@@ -8,6 +8,11 @@ import os
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATASET_PATH = os.path.join(BASE_DIR, "data", "dataset.csv")
+CHROMA_DB_PATH = os.path.join(BASE_DIR, "chroma_db")
+NLP_MAX_ROWS = int(os.getenv("NLP_MAX_ROWS", "500"))
+
 # Inicializar FastAPI
 app = FastAPI(title="NLP Browser App", version="1.0.0")
 
@@ -23,8 +28,9 @@ app.add_middleware(
 # Inicializar NLP Processor
 try:
     nlp = NLPProcessor(
-        data_path="data/dataset.csv",
-        chroma_db_path="chroma_db"
+        data_path=DATASET_PATH,
+        chroma_db_path=CHROMA_DB_PATH,
+        max_rows=NLP_MAX_ROWS
     )
     logger.info("✅ NLP Processor inicializado com sucesso")
 except Exception as e:

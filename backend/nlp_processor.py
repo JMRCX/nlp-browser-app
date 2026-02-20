@@ -12,15 +12,16 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class NLPProcessor:
-    def __init__(self, data_path: str = "data/dataset.csv", chroma_db_path: str = "chroma_db"):
+    def __init__(self, data_path: str = "data/dataset.csv", chroma_db_path: str = "chroma_db", max_rows: int = 500):
         """
         Inicializa o processador NLP com ChromaDB
         """
         self.chroma_db_path = chroma_db_path
         self.data_path = data_path
+        self.max_rows = max_rows
         
         # Modelo multilíngue (Português + Inglês)
-        self.embedding_model = SentenceTransformer("sentence-transformers/multilingual-MiniLM-L12-v2")
+        self.embedding_model = SentenceTransformer("sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
         
         # Cliente ChromaDB
         self.client = PersistentClient(
@@ -49,6 +50,7 @@ class NLPProcessor:
         try:
             # Carregar dataset
             self.df = pd.read_csv(self.data_path)
+            self.df = self._normalize_dataframe(self.df)
             logger.info(f"Dataset carregado: {len(self.df)} textos")
             
             # Criar/obter coleção
@@ -67,6 +69,55 @@ class NLPProcessor:
         except Exception as e:
             logger.error(f"Erro ao inicializar database: {e}")
             raise
+
+    def _normalize_dataframe(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Normaliza dataset para colunas padrão: texto, categoria, idioma"""
+        columns_lower_map = {col.lower(): col for col in df.columns}
+
+        text_candidates = ["texto", "text", "prompt", "content", "sentence", "message", "review"]
+        text_col = next((columns_lower_map[c] for c in text_candidates if c in columns_lower_map), None)
+
+        if text_col is None:
+            object_cols = [col for col in df.columns if df[col].dtype == "object"]
+            text_col = object_cols[0] if object_cols else None
+
+        if text_col is None:
+            raise ValueError("Nenhuma coluna de texto encontrada no dataset")
+
+        if "categoria" in columns_lower_map:
+            category_col = columns_lower_map["categoria"]
+            categoria_series = df[category_col].astype(str)
+        elif "inbound" in columns_lower_map:
+            inbound_col = columns_lower_map["inbound"]
+            categoria_series = np.where(df[inbound_col].astype(bool), "Inbound", "Outbound")
+        else:
+            categoria_series = "Geral"
+
+        if "idioma" in columns_lower_map:
+            language_col = columns_lower_map["idioma"]
+            idioma_series = df[language_col].fillna("en").astype(str)
+        elif "language" in columns_lower_map:
+            language_col = columns_lower_map["language"]
+            idioma_series = df[language_col].fillna("en").astype(str)
+        else:
+            idioma_series = "en"
+
+        normalized_df = pd.DataFrame({
+            "texto": df[text_col].astype(str),
+            "categoria": categoria_series,
+            "idioma": idioma_series,
+        })
+
+        normalized_df = normalized_df.dropna(subset=["texto"])
+        normalized_df = normalized_df[normalized_df["texto"].str.strip() != ""]
+
+        if len(normalized_df) > self.max_rows:
+            logger.info(
+                f"Dataset muito grande ({len(normalized_df)}). Limitando para {self.max_rows} linhas para inicialização rápida."
+            )
+            normalized_df = normalized_df.head(self.max_rows)
+
+        return normalized_df.reset_index(drop=True)
     
     def _add_embeddings_to_chroma(self):
         """Adiciona embeddings ao ChromaDB"""

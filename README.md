@@ -329,10 +329,22 @@ cd backend
 python -m venv venv
 source venv/bin/activate  # ou venv\Scripts\activate (Windows)
 pip install -r requirements.txt
-python app.py
+Set-Location "C:\Develop\ISEG-IA\nlp-browser-app\nlp-browser-app"; .\.venv\Scripts\Activate.ps1; python .\backend\app.py
+
 
 # Terminal 2 - Frontend
 cd frontend
-python -m http.server 8080
+# python -m http.server 8080
+Set-Location "C:\Develop\ISEG-IA\nlp-browser-app\nlp-browser-app"; .\.venv\Scripts\Activate.ps1; python .\backend\app.py
+Abrir no Browser: http://localhost:5501/
+
+**Recriar o ChromaDB**:
+Parar o backend (Ctrl + C)
+Set-Location "C:/Develop/ISEG-IA/nlp-browser-app/nlp-browser-app"; Remove-Item -Recurse -Force .\backend\chroma_db
+
+**Reiniciar o Backend**:
+Set-Location "C:\Develop\ISEG-IA\nlp-browser-app\nlp-browser-app"; .\.venv\Scripts\Activate.ps1; python .\backend\app.py
+
+
 # Ou abra index.html direto no navegador
 ```

@@ -27,7 +27,7 @@ Uma aplicação web inteligente para análise de textos usando IA, com suporte p
 ## 📦 Instalação
 
 ### Pré-requisitos
-- Python 3.8+
+- Python 3.11+
 - Node.js (opcional, para development server)
 
 ### 1. Clone o repositório
@@ -40,29 +40,29 @@ cd nlp-browser-app
 ### 2. Setup Backend
 
 ```bash
-cd backend
-
 # Criar ambiente virtual
-python -m venv venv
+py -V:Astral\CPython3.11.14 -m venv .venv
 
 # Ativar ambiente virtual
 # Windows
-venv\Scripts\activate
+.venv\Scripts\activate
 # macOS/Linux
-source venv/bin/activate
+source .venv/bin/activate
 
 # Instalar dependências
-pip install -r requirements.txt
+pip install -r backend/requirements.txt
 
-# Criar diretório de dados
-mkdir -p data
-mkdir -p chroma_db
+# Opcional: acelerar indexação inicial de embeddings (default já é 500)
+# Windows (PowerShell)
+$env:NLP_MAX_ROWS="500"
+# macOS/Linux
+export NLP_MAX_ROWS=500
 ```
 
 ### 3. Executar o Backend
 
 ```bash
-python app.py
+python backend/app.py
 ```
 
 O backend estará disponível em `http://localhost:8000`
@@ -193,7 +193,14 @@ Executa análise completa
 
 ## 🗄️ Dataset
 
-O arquivo `data/dataset.csv` contém exemplos de textos com categorias (Positivo, Negativo, Neutro).
+O arquivo `backend/data/dataset.csv` é usado como fonte de textos para embeddings.
+
+O backend normaliza automaticamente o dataset para o formato interno `texto`, `categoria`, `idioma`.
+Se as colunas padrão não existirem, ele tenta mapear nomes comuns como:
+
+- texto: `texto`, `text`, `prompt`, `content`, `sentence`, `message`, `review`
+- categoria: `categoria` (ou usa `inbound` para gerar `Inbound`/`Outbound`)
+- idioma: `idioma` ou `language` (fallback: `en`)
 
 **Formato:**
 ```csv
@@ -206,8 +213,8 @@ texto,categoria,idioma
 ### Adicionar seus próprios textos
 
 1. Edite `backend/data/dataset.csv`
-2. Adicione linhas com: `texto,categoria,idioma`
-3. Delete a pasta `chroma_db` para regenerar embeddings
+2. Preferencialmente use colunas `texto,categoria,idioma` (ou um dos nomes aceitos)
+3. Delete a pasta `backend/chroma_db` para regenerar embeddings
 4. Reinicie o backend
 
 ## 🎨 Customização
@@ -215,7 +222,7 @@ texto,categoria,idioma
 ### Modelos de Embeddings
 Em `nlp_processor.py`, line ~25:
 ```python
-self.embedding_model = SentenceTransformer("sentence-transformers/multilingual-MiniLM-L12-v2")
+self.embedding_model = SentenceTransformer("sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
 ```
 
 Outras opções:
@@ -267,6 +274,16 @@ Verifique se o backend está rodando em `http://localhost:8000`
 ### Embeddings lentando na primeira execução
 Normal! O download dos modelos leva alguns minutos. Será cacheado depois.
 
+### Backend não inicia com erro `_ssl` no Windows
+Recrie o ambiente virtual com Python 3.11 e reinstale dependências:
+```bash
+Remove-Item -Recurse -Force .venv
+py -V:Astral\CPython3.11.14 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r backend/requirements.txt
+python backend/app.py
+```
+
 ### Erro de memória com modelos grandes
 Use modelos menores:
 ```python
@@ -291,59 +308,6 @@ Desenvolvido por **JMRCX** em 2026
 ## 🤝 Contribuições
 
 Contribuições são bem-vindas! Faça um fork e crie um pull request.
-
-## ⭐ Se gostou, deixe uma star!
-
----
-
-**Made with ❤️ for NLP Enthusiasts**
-```
-
----
-
-## 🎯 Próximos Passos
-
-Agora você precisa:
-
-1. **Criar o repositório no GitHub**:
-   - Aceda a https://github.com/new
-   - Nome: `nlp-browser-app`
-   - Clique "Create repository"
-
-2. **Copiar os arquivos acima** para o repositório
-
-3. **Fazer o push inicial**:
-```bash
-git init
-git add .
-git commit -m "Initial commit: NLP Browser App with ChromaDB"
-git branch -M main
-git remote add origin https://github.com/JMRCX/nlp-browser-app.git
-git push -u origin main
-```
-
-4. **Executar localmente**:
-```bash
-# Terminal 1 - Backend
-cd backend
-python -m venv venv
-source venv/bin/activate  # ou venv\Scripts\activate (Windows)
-pip install -r requirements.txt
-Set-Location "C:\Develop\ISEG-IA\nlp-browser-app\nlp-browser-app"; .\.venv\Scripts\Activate.ps1; python .\backend\app.py
-
-
-# Terminal 2 - Frontend
-cd frontend
-# python -m http.server 8080
-Set-Location "C:\Develop\ISEG-IA\nlp-browser-app\nlp-browser-app"; .\.venv\Scripts\Activate.ps1; python .\backend\app.py
-Abrir no Browser: http://localhost:5501/
-
-**Recriar o ChromaDB**:
-Parar o backend (Ctrl + C)
-Set-Location "C:/Develop/ISEG-IA/nlp-browser-app/nlp-browser-app"; Remove-Item -Recurse -Force .\backend\chroma_db
-
-**Reiniciar o Backend**:
-Set-Location "C:\Develop\ISEG-IA\nlp-browser-app\nlp-browser-app"; .\.venv\Scripts\Activate.ps1; python .\backend\app.py
 
 
 # Ou abra index.html direto no navegador

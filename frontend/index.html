@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NLP Browser App - Análise de Textos</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🧠 NLP Browser App</h1>
+            <p>Análise inteligente de textos com IA</p>
+        </header>
+
+        <main class="main">
+            <!-- Seção de Input -->
+            <section class="input-section">
+                <div class="input-group">
+                    <label for="prompt">Insira seu texto:</label>
+                    <textarea 
+                        id="prompt" 
+                        placeholder="Digite ou cole um texto para análise..."
+                        rows="4"
+                    ></textarea>
+                    
+                    <div class="controls">
+                        <div class="slider-group">
+                            <label for="topK">Textos similares a retornar (Top K): <span id="topKValue">5</span></label>
+                            <input type="range" id="topK" min="1" max="10" value="5">
+                        </div>
+                        
+                        <div class="button-group">
+                            <button id="btnAnalisarCompleta" class="btn btn-primary">
+                                📊 Análise Completa
+                            </button>
+                            <button id="btnBuscarSimilares" class="btn btn-secondary">
+                                🔍 Textos Similares
+                            </button>
+                            <button id="btnClassificar" class="btn btn-secondary">
+                                📂 Classificar
+                            </button>
+                            <button id="btnSentimento" class="btn btn-secondary">
+                                😊 Sentimento
+                            </button>
+                            <button id="btnLimpar" class="btn btn-clear">
+                                🗑️ Limpar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Indicador de Carregamento -->
+            <div id="loading" class="loading hidden">
+                <div class="spinner"></div>
+                <p>Processando seu texto...</p>
+            </div>
+
+            <!-- Seção de Resultados -->
+            <section class="results-section hidden" id="resultsSection">
+                <!-- Análise Completa -->
+                <div id="analisaCompleta" class="result-box hidden">
+                    <h2>📊 Análise Completa</h2>
+                    
+                    <!-- Classificação -->
+                    <div class="result-card">
+                        <h3>Classificação</h3>
+                        <div id="classificacaoResult"></div>
+                    </div>
+
+                    <!-- Sentimento -->
+                    <div class="result-card">
+                        <h3>Análise de Sentimento</h3>
+                        <div id="sentimentoResult"></div>
+                    </div>
+
+                    <!-- Textos Similares -->
+                    <div class="result-card">
+                        <h3>Textos Similares no Dataset</h3>
+                        <div id="similaresResult"></div>
+                    </div>
+                </div>
+
+                <!-- Textos Similares -->
+                <div id="textosSimilares" class="result-box hidden">
+                    <h2>🔍 Textos Similares</h2>
+                    <div id="similaresContent"></div>
+                </div>
+
+                <!-- Classificação -->
+                <div id="classificacaoBox" class="result-box hidden">
+                    <h2>📂 Classificação</h2>
+                    <div id="classificacaoContent"></div>
+                </div>
+
+                <!-- Sentimento -->
+                <div id="sentimentoBox" class="result-box hidden">
+                    <h2>😊 Análise de Sentimento</h2>
+                    <div id="sentimentoContent"></div>
+                </div>
+            </section>
+
+            <!-- Mensagem de Erro -->
+            <div id="error" class="error hidden"></div>
+        </main>
+
+        <footer class="footer">
+            <p>NLP Browser App © 2026 | Powered by ChromaDB + SentenceTransformers</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,33 +1,338 @@
-# NLP Browser App
+markdown
+# 🧠 NLP Browser App
 
-This project is a browser-based application designed to leverage Natural Language Processing (NLP) techniques for analyzing and interpreting textual data. It provides users with tools to perform various NLP tasks, such as sentiment analysis, named entity recognition, and text classification. 
+Uma aplicação web inteligente para análise de textos usando IA, com suporte para Português e Inglês.
 
-## Features
-- Sentiment analysis of texts
-- Named entity recognition
-- Text summarization
-- User-friendly interface
+## ✨ Funcionalidades
 
-## Getting Started
-1. Clone the repository:
-   ```
-   git clone https://github.com/JMRCX/nlp-browser-app.git
-   ```
-2. Navigate to the project directory:
-   ```
-   cd nlp-browser-app
-   ```
-3. Install the required dependencies:
-   ```
-   npm install
-   ```
-4. Start the application:
-   ```
-   npm start
-   ```
+- 🔍 **Busca de Textos Similares**: Encontra textos semelhantes no dataset usando embeddings vetorizados
+- 📂 **Classificação de Texto**: Classifica automaticamente textos em categorias predefinidas
+- 😊 **Análise de Sentimento**: Detecta o sentimento do texto (Positivo/Negativo/Neutro)
+- 🧠 **Modelos Multilíngues**: Suporte completo para Português e Inglês
+- 📊 **Análise Completa**: Executa todas as análises simultaneamente
 
-## Contributing
-Contributions are welcome! Please open an issue or submit a pull request for any suggestions or improvements.
+## 🛠️ Tecnologias
 
-## License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+### Backend
+- **FastAPI**: Framework web rápido e moderno
+- **ChromaDB**: Banco de dados vetorial para embeddings
+- **SentenceTransformers**: Modelos pré-treinados para embeddings multilíngues
+- **HuggingFace Transformers**: Modelos de IA pré-treinados
+
+### Frontend
+- **HTML5**: Estrutura semântica
+- **CSS3**: Design responsivo e moderno
+- **JavaScript**: Interatividade e chamadas à API
+
+## 📦 Instalação
+
+### Pré-requisitos
+- Python 3.8+
+- Node.js (opcional, para development server)
+
+### 1. Clone o repositório
+
+```bash
+git clone https://github.com/JMRCX/nlp-browser-app.git
+cd nlp-browser-app
+```
+
+### 2. Setup Backend
+
+```bash
+cd backend
+
+# Criar ambiente virtual
+python -m venv venv
+
+# Ativar ambiente virtual
+# Windows
+venv\Scripts\activate
+# macOS/Linux
+source venv/bin/activate
+
+# Instalar dependências
+pip install -r requirements.txt
+
+# Criar diretório de dados
+mkdir -p data
+mkdir -p chroma_db
+```
+
+### 3. Executar o Backend
+
+```bash
+python app.py
+```
+
+O backend estará disponível em `http://localhost:8000`
+
+Swagger UI: `http://localhost:8000/docs`
+
+### 4. Abrir o Frontend
+
+```bash
+# Em outra aba do terminal, abra o arquivo
+cd ../frontend
+```
+
+Abra `index.html` no seu navegador ou use um servidor local:
+
+```bash
+# Python 3.6+
+python -m http.server 8080
+
+# Acesse em http://localhost:8080
+```
+
+## 🚀 Como Usar
+
+1. **Digite um texto** na caixa de input
+2. **Escolha uma análise**:
+   - 📊 Análise Completa: Executa tudo de uma vez
+   - 🔍 Textos Similares: Encontra textos parecidos no dataset
+   - 📂 Classificar: Classifica em categorias
+   - 😊 Sentimento: Analisa o sentimento
+3. **Visualize os resultados** em tempo real
+
+### Atalhos
+- **Ctrl + Enter**: Executa análise completa
+
+## 📊 API Endpoints
+
+### POST `/buscar_similares`
+Busca textos similares no dataset
+
+**Request:**
+```json
+{
+  "prompt": "Seu texto aqui",
+  "top_k": 5
+}
+```
+
+**Response:**
+```json
+{
+  "sucesso": true,
+  "prompt": "...",
+  "quantidade": 5,
+  "textos": [
+    {
+      "id": "doc_0",
+      "texto": "...",
+      "categoria": "Positivo",
+      "similitude": 0.95,
+      "idioma": "pt"
+    }
+  ]
+}
+```
+
+### POST `/classificar`
+Classifica um texto
+
+**Request:**
+```json
+{
+  "prompt": "Seu texto aqui"
+}
+```
+
+**Response:**
+```json
+{
+  "sucesso": true,
+  "prompt": "...",
+  "classificacao": {
+    "categoria": "Positivo",
+    "confianca": 0.92,
+    "todas_categorias": [...]
+  }
+}
+```
+
+### POST `/sentimento`
+Analisa sentimento
+
+**Request:**
+```json
+{
+  "prompt": "Seu texto aqui"
+}
+```
+
+**Response:**
+```json
+{
+  "sucesso": true,
+  "prompt": "...",
+  "sentimento": {
+    "sentimento": "Positivo",
+    "label_original": "5 stars",
+    "confianca": 0.89
+  }
+}
+```
+
+### POST `/analise_completa`
+Executa análise completa
+
+**Response:**
+```json
+{
+  "sucesso": true,
+  "resultado": {
+    "prompt": "...",
+    "textos_similares": [...],
+    "classificacao": {...},
+    "sentimento": {...}
+  }
+}
+```
+
+## 🗄️ Dataset
+
+O arquivo `data/dataset.csv` contém exemplos de textos com categorias (Positivo, Negativo, Neutro).
+
+**Formato:**
+```csv
+texto,categoria,idioma
+"Este é um ótimo produto.",Positivo,pt
+"This product is amazing!",Positivo,en
+"Não gostei.",Negativo,pt
+```
+
+### Adicionar seus próprios textos
+
+1. Edite `backend/data/dataset.csv`
+2. Adicione linhas com: `texto,categoria,idioma`
+3. Delete a pasta `chroma_db` para regenerar embeddings
+4. Reinicie o backend
+
+## 🎨 Customização
+
+### Modelos de Embeddings
+Em `nlp_processor.py`, line ~25:
+```python
+self.embedding_model = SentenceTransformer("sentence-transformers/multilingual-MiniLM-L12-v2")
+```
+
+Outras opções:
+- `paraphrase-multilingual-MiniLM-L12-v2`
+- `multilingual-e5-small`
+- `multilingual-e5-base`
+
+### Modelos de Sentimento
+Em `nlp_processor.py`, line ~31:
+```python
+self.sentiment_pipeline = pipeline(
+    "sentiment-analysis",
+    model="nlptown/bert-base-multilingual-uncased-sentiment"
+)
+```
+
+### Categorias Padrão
+O sistema detecta automaticamente as categorias do CSV. Para forçar categorias específicas, edite a função `classificar_texto()`.
+
+## 📝 Estrutura de Diretórios
+
+```
+nlp-browser-app/
+├── backend/
+│   ├── app.py                 # FastAPI app principal
+│   ├── nlp_processor.py       # Lógica NLP
+│   ├── requirements.txt       # Dependências Python
+│   ├── data/
+│   │   └── dataset.csv        # Dados de exemplo
+│   └── chroma_db/             # Vector store (gerado automaticamente)
+├── frontend/
+│   ├── index.html             # Interface web
+│   ├── style.css              # Estilos
+│   └── script.js              # Lógica frontend
+├── .gitignore
+└── README.md
+```
+
+## 🔧 Troubleshooting
+
+### Erro: "ModuleNotFoundError: No module named 'sentence_transformers'"
+```bash
+pip install sentence-transformers
+```
+
+### Erro: CORS quando abrir o frontend
+Verifique se o backend está rodando em `http://localhost:8000`
+
+### Embeddings lentando na primeira execução
+Normal! O download dos modelos leva alguns minutos. Será cacheado depois.
+
+### Erro de memória com modelos grandes
+Use modelos menores:
+```python
+SentenceTransformer("sentence-transformers/paraphrase-MiniLM-L6-v2")
+```
+
+## 📚 Referências
+
+- [ChromaDB Docs](https://docs.trychroma.com/)
+- [SentenceTransformers](https://www.sbert.net/)
+- [FastAPI](https://fastapi.tiangolo.com/)
+- [HuggingFace Models](https://huggingface.co/models)
+
+## 📄 Licença
+
+MIT License - Sinta-se livre para usar e modificar!
+
+## 👤 Autor
+
+Desenvolvido por **JMRCX** em 2026
+
+## 🤝 Contribuições
+
+Contribuições são bem-vindas! Faça um fork e crie um pull request.
+
+## ⭐ Se gostou, deixe uma star!
+
+---
+
+**Made with ❤️ for NLP Enthusiasts**
+```
+
+---
+
+## 🎯 Próximos Passos
+
+Agora você precisa:
+
+1. **Criar o repositório no GitHub**:
+   - Aceda a https://github.com/new
+   - Nome: `nlp-browser-app`
+   - Clique "Create repository"
+
+2. **Copiar os arquivos acima** para o repositório
+
+3. **Fazer o push inicial**:
+```bash
+git init
+git add .
+git commit -m "Initial commit: NLP Browser App with ChromaDB"
+git branch -M main
+git remote add origin https://github.com/JMRCX/nlp-browser-app.git
+git push -u origin main
+```
+
+4. **Executar localmente**:
+```bash
+# Terminal 1 - Backend
+cd backend
+python -m venv venv
+source venv/bin/activate  # ou venv\Scripts\activate (Windows)
+pip install -r requirements.txt
+python app.py
+
+# Terminal 2 - Frontend
+cd frontend
+python -m http.server 8080
+# Ou abra index.html direto no navegador
+```

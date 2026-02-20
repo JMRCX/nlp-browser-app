@@ -45,3 +45,4 @@ Thumbs.db
 # Cache
 .cache/
 *.cache
+backend/data/dataset.csv

@@ -1,9 +1,9 @@
 import pandas as pd
 import numpy as np
+from typing import Any, Optional
 from sentence_transformers import SentenceTransformer
 from chromadb import PersistentClient
 from chromadb.config import Settings
-from sklearn.metrics.pairwise import cosine_similarity
 from transformers import pipeline
 import logging
 
@@ -43,8 +43,8 @@ class NLPProcessor:
             model="joeddav/xlm-roberta-large-xnli"
         )
         
-        self.df = None
-        self.collection = None
+        self.df: Optional[pd.DataFrame] = None
+        self.collection: Optional[Any] = None
         self._initialize_database()
     
     def _initialize_database(self):
@@ -123,16 +123,20 @@ class NLPProcessor:
     
     def _add_embeddings_to_chroma(self):
         """Adiciona embeddings ao ChromaDB"""
+        if self.df is None or self.collection is None:
+            raise RuntimeError("Dataset ou coleção não inicializados")
+
         textos = self.df['texto'].tolist()
         ids = [f"doc_{i}" for i in range(len(textos))]
         
         # Gerar embeddings em batch
         embeddings = self.embedding_model.encode(textos, show_progress_bar=True)
+        embeddings_list = np.asarray(embeddings).tolist()
         
         # Adicionar ao ChromaDB
         self.collection.add(
             ids=ids,
-            embeddings=embeddings.tolist(),
+            embeddings=embeddings_list,
             documents=textos,
             metadatas=[
                 {
@@ -149,30 +153,38 @@ class NLPProcessor:
         Busca textos similares usando embeddings
         """
         try:
+            if self.collection is None:
+                raise RuntimeError("Coleção não inicializada")
+
             # Gerar embedding do prompt
             prompt_embedding = self.embedding_model.encode([prompt])
+            prompt_embedding_list = np.asarray(prompt_embedding).tolist()
             
             # Buscar no ChromaDB
             results = self.collection.query(
-                query_embeddings=prompt_embedding.tolist(),
+                query_embeddings=prompt_embedding_list,
                 n_results=top_k
             )
             
             # Processar resultados
             textos_similares = []
-            for i in range(len(results['ids'][0])):
-                doc_id = results['ids'][0][i]
-                distancia = results['distances'][0][i]
+            result_ids = results.get('ids') or [[]]
+            result_distances = results.get('distances') or [[]]
+            result_documents = results.get('documents') or [[]]
+            result_metadatas = results.get('metadatas') or [[]]
+
+            for i in range(len(result_ids[0])):
+                doc_id = result_ids[0][i]
+                distancia = result_distances[0][i]
                 similitude = 1 - (distancia / 2)  # Converter para score 0-1
-                
-                idx = int(doc_id.split('_')[1])
+                metadata = result_metadatas[0][i] if i < len(result_metadatas[0]) else {}
                 
                 textos_similares.append({
                     "id": doc_id,
-                    "texto": results['documents'][0][i],
-                    "categoria": results['metadatas'][0][i]['categoria'],
+                    "texto": result_documents[0][i],
+                    "categoria": metadata.get('categoria', 'Geral'),
                     "similitude": float(similitude),
-                    "idioma": results['metadatas'][0][i].get('idioma', 'pt')
+                    "idioma": metadata.get('idioma', 'pt')
                 })
             
             return textos_similares
@@ -181,25 +193,35 @@ class NLPProcessor:
             logger.error(f"Erro ao buscar textos similares: {e}")
             return []
     
-    def classificar_texto(self, texto: str, categorias: list = None) -> dict:
+    def classificar_texto(self, texto: str, categorias: Optional[list[str]] = None) -> dict:
         """
         Classifica o texto em uma das categorias disponíveis
         """
         try:
+            if self.df is None:
+                raise RuntimeError("Dataset não inicializado")
+
             if categorias is None:
                 categorias = self.df['categoria'].unique().tolist()
             
             resultado = self.classifier(texto, categorias, multi_class=False)
+            if not isinstance(resultado, dict):
+                raise ValueError("Saída inesperada da classificação")
+
+            labels = list(resultado.get('labels', []))
+            scores = list(resultado.get('scores', []))
+            if not labels or not scores:
+                raise ValueError("Classificação sem labels/scores")
             
             return {
-                "categoria": resultado['labels'][0],
-                "confianca": float(resultado['scores'][0]),
+                "categoria": str(labels[0]),
+                "confianca": float(scores[0]),
                 "todas_categorias": [
                     {
-                        "categoria": label,
+                        "categoria": str(label),
                         "score": float(score)
                     }
-                    for label, score in zip(resultado['labels'], resultado['scores'])
+                    for label, score in zip(labels, scores)
                 ]
             }
         except Exception as e:
@@ -212,6 +234,10 @@ class NLPProcessor:
         """
         try:
             resultado = self.sentiment_pipeline(texto)
+            if not isinstance(resultado, list) or not resultado:
+                raise ValueError("Saída inesperada da análise de sentimento")
+            if not isinstance(resultado[0], dict):
+                raise ValueError("Item de sentimento inválido")
             
             label_map = {
                 "1 star": "Muito Negativo",
@@ -221,13 +247,13 @@ class NLPProcessor:
                 "5 stars": "Muito Positivo"
             }
             
-            label = resultado[0]['label']
+            label = str(resultado[0].get('label', ''))
             sentimento = label_map.get(label, label)
             
             return {
                 "sentimento": sentimento,
                 "label_original": label,
-                "confianca": float(resultado[0]['score'])
+                "confianca": float(resultado[0].get('score', 0.0))
             }
         except Exception as e:
             logger.error(f"Erro ao analisar sentimento: {e}")

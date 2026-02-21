@@ -5,13 +5,15 @@ from chromadb import PersistentClient
 from chromadb.config import Settings
 from sklearn.metrics.pairwise import cosine_similarity
 from transformers import pipeline
-import os
 import logging
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class NLPProcessor:
+    # Classe responsável por processar o dataset, gerar embeddings, buscar similares, classificar e analisar sentimento
+    # O parâmetro "max_rows = 500" limita o número de linhas do dataset para inicialização rápida (útil para datasets muito grandes)
+    # em produção, pode ser ajustado ou removido conforme necessário.
     def __init__(self, data_path: str = "data/dataset.csv", chroma_db_path: str = "chroma_db", max_rows: int = 500):
         """
         Inicializa o processador NLP com ChromaDB

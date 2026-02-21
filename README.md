@@ -65,6 +65,10 @@ export NLP_MAX_ROWS=500
 python backend/app.py
 ```
 
+ou
+
+Terminal 1: Set-Location "C:\Develop\nlp-browser-app"; .\.venv\Scripts\Activate.ps1; python backend/app.py
+
 O backend estará disponível em `http://localhost:8000`
 
 Swagger UI: `http://localhost:8000/docs`
@@ -81,9 +85,17 @@ Abra `index.html` no seu navegador ou use um servidor local:
 ```bash
 # Python 3.6+
 python -m http.server 8080
+```
+
+Terminal 2: Set-Location "C:\Develop\nlp-browser-app\frontend"; python -m http.server 8080
 
 # Acesse em http://localhost:8080
 ```
+
+## 🔧 Validar:
+- Backend: Acesse `http://127.0.0.1:8000/health
+- Frontend: Acesse `http://localhost:8080` ou abra `index.html`
+
 
 ## 🚀 Como Usar
 
@@ -262,6 +274,12 @@ nlp-browser-app/
 ```
 
 ## 🔧 Troubleshooting
+
+### Erro: Se erro de porta, matar processo preso com:"
+```bash
+Get-NetTCPConnection -LocalPort 8000 -State Listen | Select-Object OwningProcess
+Stop-Process -Id <PID> -Force
+```
 
 ### Erro: "ModuleNotFoundError: No module named 'sentence_transformers'"
 ```bash

@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATASET_PATH = os.path.join(BASE_DIR, "data", "dataset.csv")
 CHROMA_DB_PATH = os.path.join(BASE_DIR, "chroma_db")
-NLP_MAX_ROWS = int(os.getenv("NLP_MAX_ROWS", "500"))
+NLP_MAX_ROWS = int(os.getenv("NLP_MAX_ROWS", "35000"))
 
 # Inicializar FastAPI
 app = FastAPI(title="NLP Browser App", version="1.0.0")

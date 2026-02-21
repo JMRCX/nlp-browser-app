@@ -14,7 +14,7 @@ class NLPProcessor:
     # Classe responsável por processar o dataset, gerar embeddings, buscar similares, classificar e analisar sentimento
     # O parâmetro "max_rows = 500" limita o número de linhas do dataset para inicialização rápida (útil para datasets muito grandes)
     # em produção, pode ser ajustado ou removido conforme necessário.
-    def __init__(self, data_path: str = "data/dataset.csv", chroma_db_path: str = "chroma_db", max_rows: int = 500):
+    def __init__(self, data_path: str = "data/dataset.csv", chroma_db_path: str = "chroma_db", max_rows: int = 35000):
         """
         Inicializa o processador NLP com ChromaDB
         """
@@ -113,11 +113,11 @@ class NLPProcessor:
         normalized_df = normalized_df.dropna(subset=["texto"])
         normalized_df = normalized_df[normalized_df["texto"].str.strip() != ""]
 
-        if len(normalized_df) > self.max_rows:
-            logger.info(
-                f"Dataset muito grande ({len(normalized_df)}). Limitando para {self.max_rows} linhas para inicialização rápida."
-            )
-            normalized_df = normalized_df.head(self.max_rows)
+        ## if len(normalized_df) > self.max_rows:
+        ##    logger.info(
+        ##        f"Dataset muito grande ({len(normalized_df)}). Limitando para {self.max_rows} linhas para inicialização rápida."
+        ##    )
+        ##    normalized_df = normalized_df.head(self.max_rows)
 
         return normalized_df.reset_index(drop=True)
     
